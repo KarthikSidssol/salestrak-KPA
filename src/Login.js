@@ -40,8 +40,9 @@ const AuthPaper = styled(Paper)(({ theme }) => ({
   boxShadow: theme.shadows[3],
 }));
 
-const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
-  const [isForgotPassword, setIsForgotPassword] = useState(false);
+const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading ,  isForgotPassword,
+  setIsForgotPassword }) => {
+  // const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -381,6 +382,7 @@ const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
 
   const handleSubmit = async (formData, isForgotPassword) => {
@@ -396,8 +398,8 @@ const Login = () => {
       const payload = isForgotPassword
         ? {
             email: formData.email,
-            newPassword: formData.password,
-            confirmPassword: formData.confirmPassword
+            password: formData.password,
+            newPassword: formData.confirmPassword
           }
         : isRegister
           ? {
@@ -429,7 +431,8 @@ const Login = () => {
 
       if (isForgotPassword) {
         enqueueSnackbar('Password reset successful! Please login', { variant: 'success' });
-        setIsRegister(false);
+        // setIsRegister(false);
+        setIsForgotPassword(false);
       } else if (isRegister) {
         enqueueSnackbar('Registration successful! Please login', { variant: 'success' });
         setIsRegister(false);
@@ -453,6 +456,8 @@ const Login = () => {
           toggleForm={() => setIsRegister(!isRegister)}
           onSubmit={handleSubmit}
           isLoading={isLoading}
+          isForgotPassword={isForgotPassword}
+          setIsForgotPassword={setIsForgotPassword}
         />
       </AuthPaper>
     </AuthContainer>
