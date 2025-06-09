@@ -16,6 +16,8 @@ import {
 import { styled } from '@mui/material/styles';
 import backgroundImage from './assets/spa_bg.png';
 import { GoogleReCaptchaProvider, GoogleReCaptcha } from 'react-google-recaptcha-v3';
+import logo from './assets/salestrakpa-logo.png';
+import { SnackbarProvider, useSnackbar } from 'notistack';
 
 const AuthContainer = styled(Container)(({ theme }) => ({
   height: '100vh',
@@ -39,6 +41,7 @@ const AuthPaper = styled(Paper)(({ theme }) => ({
 }));
 
 const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -54,7 +57,6 @@ const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
   });
 
   const validatePassword = (password) => {
-    // At least 8 characters, 1 special character, and alphanumeric
     const regex = /^(?=.*[!@#$%^&*])(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/;
     return regex.test(password);
   };
@@ -66,7 +68,6 @@ const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
       [name]: type === 'checkbox' ? checked : value
     }));
 
-    // Validate password when it changes
     if (name === 'password') {
       if (value && !validatePassword(value)) {
         setErrors(prev => ({
@@ -80,7 +81,6 @@ const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
         }));
       }
 
-      // Also validate confirmation if confirmPassword has value
       if (formData.confirmPassword) {
         setErrors(prev => ({
           ...prev,
@@ -89,7 +89,6 @@ const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
       }
     }
 
-    // Validate confirmation when confirmPassword changes
     if (name === 'confirmPassword') {
       setErrors(prev => ({
         ...prev,
@@ -100,9 +99,8 @@ const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Final validation before submit
-    if (isRegister) {
+  
+    if (isForgotPassword || isRegister) {
       if (formData.password !== formData.confirmPassword) {
         setErrors(prev => ({
           ...prev,
@@ -120,70 +118,54 @@ const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
       }
     }
     
-    onSubmit(formData);
+    onSubmit(formData, isForgotPassword);
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <Typography variant="h5" gutterBottom align="center" sx={{ fontWeight: 500 }}>
-        {isRegister ? 'Registration' : 'Salestrak PA'}
-      </Typography>
-      
-      {isRegister && (
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Full Name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          size="small"
-          sx={{ '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' } }}
-        />
-      )}
-
-      <TextField
-        fullWidth
-        margin="normal"
-        label="Email Address"
-        name="email"
-        type="email"
-        value={formData.email}
-        onChange={handleChange}
-        autoComplete='off'
-        autoFocus
-        required
-        size="small"
-        sx={{ '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' } }}
-      />
-
-      <TextField
-        fullWidth
-        margin="normal"
-        label="Password"
-        name="password"
-        type="password"
-        value={formData.password}
-        onChange={handleChange}
-        required
-        size="small"
-        error={!!errors.password}
-        helperText={errors.password}
-        sx={{ 
-          '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' },
-          '& .MuiFormHelperText-root': {
-            color: errors.password ? 'error.main' : 'success.main'
-          }
-        }}
-      />
-
-      {isRegister && (
+      {isForgotPassword ? (
         <>
+          <Typography variant="h5" gutterBottom align="center" sx={{ fontWeight: 500 }}>
+            Reset Password
+          </Typography>
+          
           <TextField
             fullWidth
             margin="normal"
-            label="Confirm Password"
+            label="Email Address"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            size="small"
+            sx={{ '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' } }}
+          />
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="New Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            size="small"
+            error={!!errors.password}
+            helperText={errors.password}
+            sx={{ 
+              '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' },
+              '& .MuiFormHelperText-root': {
+                color: errors.password ? 'error.main' : 'success.main'
+              }
+            }}
+          />
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Confirm New Password"
             name="confirmPassword"
             type="password"
             value={formData.confirmPassword}
@@ -200,74 +182,197 @@ const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
             }}
           />
 
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="medium"
+            sx={{ 
+              mt: 2, 
+              py: 1,
+              backgroundColor: 'primary.main',
+              '&:hover': { backgroundColor: 'primary.dark' }
+            }}
+            disabled={isLoading || !!errors.password || !!errors.confirmPassword}
+          >
+            {isLoading ? <CircularProgress size={22} /> : 'Reset Password'}
+          </Button>
+
+          <Typography variant="body2" align="center" sx={{ mt: 2, opacity: 0.7 }}>
+            <Link 
+              component="button" 
+              onClick={() => setIsForgotPassword(false)}
+            >
+              Back to Login
+            </Link>
+          </Typography>
+        </>
+      ) : (
+        <>
+          {isRegister ? (
+            <Typography variant="h5" gutterBottom align="center" sx={{ fontWeight: 500 }}>
+              Registration
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <img 
+                src={logo} 
+                alt="Salestrak PA Logo" 
+                style={{ 
+                  height: 'auto', 
+                  width: '180px',
+                  maxWidth: '100%' 
+                }} 
+              />
+            </Box>
+          )}
+          
+          {isRegister && (
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Full Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              size="small"
+              sx={{ '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' } }}
+            />
+          )}
+
           <TextField
             fullWidth
             margin="normal"
-            label="Mobile Number"
-            name="mobile"
-            type="tel"
-            value={formData.mobile}
+            label="Email Address"
+            name="email"
+            type="email"
+            value={formData.email}
             onChange={handleChange}
+            autoComplete='off'
+            autoFocus
             required
             size="small"
             sx={{ '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' } }}
           />
 
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="acceptTerms"
-                checked={formData.acceptTerms}
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            size="small"
+            error={!!errors.password}
+            helperText={errors.password}
+            sx={{ 
+              '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' },
+              '& .MuiFormHelperText-root': {
+                color: errors.password ? 'error.main' : 'success.main'
+              }
+            }}
+          />
+
+          {isRegister && (
+            <>
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                color="primary"
                 size="small"
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword}
+                sx={{ 
+                  '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' },
+                  '& .MuiFormHelperText-root': {
+                    color: errors.confirmPassword ? 'error.main' : 'success.main'
+                  }
+                }}
               />
-            }
-            label={
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                I agree to the <Link href="#" color="primary">Terms</Link>
-              </Typography>
-            }
-            sx={{ mt: 1 }}
-          />
+
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Mobile Number"
+                name="mobile"
+                type="tel"
+                value={formData.mobile}
+                onChange={handleChange}
+                required
+                size="small"
+                sx={{ '& .MuiInputBase-root': { backgroundColor: 'rgba(255, 255, 255, 0.8)' } }}
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="acceptTerms"
+                    checked={formData.acceptTerms}
+                    onChange={handleChange}
+                    required
+                    color="primary"
+                    size="small"
+                  />
+                }
+                label={
+                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                    I agree to the <Link href="#" color="primary">Terms</Link>
+                  </Typography>
+                }
+                sx={{ mt: 1 }}
+              />
+            </>
+          )}
+
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="medium"
+            sx={{ 
+              mt: 2, 
+              py: 1,
+              backgroundColor: 'primary.main',
+              '&:hover': { backgroundColor: 'primary.dark' }
+            }}
+            disabled={isLoading || (isRegister && (!!errors.password || !!errors.confirmPassword))}
+          >
+            {isLoading ? <CircularProgress size={22} /> : (isRegister ? 'Register' : 'Sign In')}
+          </Button>
+
+          <Divider sx={{ my: 2, opacity: 0.5 }} />
+
+          <Typography variant="body2" align="center" sx={{ opacity: 0.8 }}>
+            {isRegister ? 'Already have an account? ' : "Don't have an account? "}
+            <Link 
+              component="button" 
+              variant="body2" 
+              onClick={toggleForm}
+              sx={{ ml: 0.5 }}
+            >
+              {isRegister ? 'Sign in' : 'Register'}
+            </Link>
+          </Typography>
+
+          {!isRegister && (
+            <Typography variant="body2" align="center" sx={{ mt: 1, opacity: 0.7 }}>
+              <Link 
+                component="button" 
+                onClick={() => setIsForgotPassword(true)}
+              >
+                Forgot password?
+              </Link>
+            </Typography>
+          )}
         </>
-      )}
-
-      <Button
-        fullWidth
-        type="submit"
-        variant="contained"
-        size="medium"
-        sx={{ 
-          mt: 2, 
-          py: 1,
-          backgroundColor: 'primary.main',
-          '&:hover': { backgroundColor: 'primary.dark' }
-        }}
-        disabled={isLoading || (isRegister && (!!errors.password || !!errors.confirmPassword))}
-      >
-        {isLoading ? <CircularProgress size={22} /> : (isRegister ? 'Register' : 'Sign In')}
-      </Button>
-
-      <Divider sx={{ my: 2, opacity: 0.5 }} />
-
-      <Typography variant="body2" align="center" sx={{ opacity: 0.8 }}>
-        {isRegister ? 'Already have an account? ' : "Don't have an account? "}
-        <Link 
-          component="button" 
-          variant="body2" 
-          onClick={toggleForm}
-          sx={{ ml: 0.5 }}
-        >
-          {isRegister ? 'Sign in' : 'Register'}
-        </Link>
-      </Typography>
-
-      {!isRegister && (
-        <Typography variant="body2" align="center" sx={{ mt: 1, opacity: 0.7 }}>
-          <Link href="#">Forgot password?</Link>
-        </Typography>
       )}
     </form>
   );
@@ -276,12 +381,68 @@ const AuthForm = ({ isRegister, toggleForm, onSubmit, isLoading }) => {
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
 
-  const handleSubmit = async (formData) => {
+  const handleSubmit = async (formData, isForgotPassword) => {
     setIsLoading(true);
-    console.log(isRegister ? 'Registering:' : 'Logging in:', formData);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsLoading(false);
+    
+    try {
+      const apiUrl = isForgotPassword 
+        ? '/forgotPassword' 
+        : isRegister 
+          ? '/register' 
+          : '/login';
+
+      const payload = isForgotPassword
+        ? {
+            email: formData.email,
+            newPassword: formData.password,
+            confirmPassword: formData.confirmPassword
+          }
+        : isRegister
+          ? {
+              name: formData.name,
+              email: formData.email,
+              password: formData.password,
+              mobile: formData.mobile,
+              acceptTerms: formData.acceptTerms,
+            }
+          : {
+              email: formData.email,
+              password: formData.password,
+            };
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}${apiUrl}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        credentials: 'include' 
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong');
+      }
+
+      if (isForgotPassword) {
+        enqueueSnackbar('Password reset successful! Please login', { variant: 'success' });
+        setIsRegister(false);
+      } else if (isRegister) {
+        enqueueSnackbar('Registration successful! Please login', { variant: 'success' });
+        setIsRegister(false);
+      } else {
+        enqueueSnackbar('Login successful! Redirecting...', { variant: 'success' });
+        // Handle login success (store token, redirect, etc.)
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      enqueueSnackbar(error.message || 'Request failed', { variant: 'error' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
