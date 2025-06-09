@@ -18,6 +18,8 @@ import backgroundImage from './assets/spa_bg.png';
 import { GoogleReCaptchaProvider, GoogleReCaptcha } from 'react-google-recaptcha-v3';
 import logo from './assets/salestrakpa-logo.png';
 import { SnackbarProvider, useSnackbar } from 'notistack';
+import { useNavigate } from 'react-router-dom';
+
 
 const AuthContainer = styled(Container)(({ theme }) => ({
   height: '100vh',
@@ -384,6 +386,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate();
 
   const handleSubmit = async (formData, isForgotPassword) => {
     setIsLoading(true);
@@ -439,6 +442,7 @@ const Login = () => {
       } else {
         enqueueSnackbar('Login successful! Redirecting...', { variant: 'success' });
         // Handle login success (store token, redirect, etc.)
+        navigate('/home');
       }
     } catch (error) {
       console.error('Error:', error);
