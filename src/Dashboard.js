@@ -17,9 +17,11 @@ import {
   Avatar,
   ListItemAvatar,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  IconButton
 } from '@mui/material';
 import Header from './Header';
+import AddIcon from '@mui/icons-material/Add';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -87,6 +89,15 @@ const Dashboard = () => {
     fetchAllData();
   }, []);
 
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleString('en-GB', { month: 'short' }); // e.g., "Jun"
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+
   // Filter items based on search term
   const filteredItems = searchTerm 
     ? itemsData.flatMap(headerGroup => 
@@ -136,6 +147,18 @@ const Dashboard = () => {
                     color: 'white',
                     py: 0.5
                   }}
+                  action={
+                    <IconButton 
+                      aria-label="add" 
+                      sx={{ color: 'white' }}
+                      onClick={() => {
+                        window.location.href = '/newitem';
+                      }}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  }
+
                 />
                 <CardContent sx={{ 
                   flex: 1,
@@ -286,9 +309,17 @@ const Dashboard = () => {
                             primary={reminder.reminder_name}
                             secondary={
                               <>
-                                <Typography component="span" variant="body2" color="text.primary">
+                               <Typography component="div" variant="body2" color="text.primary">
+                                  <Typography component="span" sx={{ fontWeight: 500 }}>
+                                    Remainder Date:
+                                  </Typography>{' '}
+                                  {formatDate(reminder.reminder_date)}
+                                </Typography>
+
+                                <Typography component="div" variant="body2" color="text.primary">
                                   {reminder.item_title} • {reminder.header_name}
                                 </Typography>
+
                                 {reminder.alert_before && (
                                   <Box component="span" display="block">
                                     <Chip 
