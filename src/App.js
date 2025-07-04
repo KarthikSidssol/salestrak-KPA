@@ -5,6 +5,7 @@ import Login from './Login';
 import Dashboard from './Dashboard';
 import RedirectIfLoggedIn from './RedirectIfLoggedIn';
 import ProtectedRoute from './ProtectedRoute';
+import Newitem from './Newitem';
 
 function App() {
   return (
@@ -20,7 +21,10 @@ function App() {
         <Routes>
           <Route path="/" element={<RedirectIfLoggedIn><Login /></RedirectIfLoggedIn>} />
           <Route path="/login" element={<RedirectIfLoggedIn><Login /></RedirectIfLoggedIn>} />
-          <Route path="/home" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
+          {/* <Route path="/home" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/> */}
+          <Route path="/home" element={<Dashboard/>}/>
+          <Route path="/newitem" element={<ProtectedRoute><Newitem/></ProtectedRoute>} />
+          <Route path="/newitem/:encodedHeaderId/:encodedItemId" element={<ProtectedRoute><Newitem /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </SnackbarProvider>
