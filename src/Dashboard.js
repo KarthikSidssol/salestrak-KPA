@@ -18,22 +18,28 @@ import {
   ListItemAvatar,
   useTheme,
   useMediaQuery,
-  IconButton
+  IconButton,
+  Autocomplete,
+  ListItemIcon
 } from '@mui/material';
 import Header from './Header';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadIcon from '@mui/icons-material/Download';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [itemsData, setItemsData] = useState([]);
   const [remindersData, setRemindersData] = useState([]);
   const [documentData, setDocumentData] = useState([]);
+  const [searchOptions, setSearchOptions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState({
     items: true,
     reminders: true,
     user: true,
-    documents: true
+    documents: true,
+    search: false
   });
   
   const theme = useTheme();
@@ -107,6 +113,62 @@ const Dashboard = () => {
         )
       )
     : [];
+
+  // Fetch search suggestions
+const fetchAllDocuments = async () => {
+  setLoading(prev => ({...prev, documents: true}));
+  try {
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/getAllDocumentData`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    const data = await res.json();
+    setDocumentData(data);
+  } catch (err) {
+    console.error('Error fetching documents:', err);
+  } finally {
+    setLoading(prev => ({...prev, documents: false}));
+  }
+};
+
+const fetchSearchSuggestions = async (searchTerm) => {
+  if (!searchTerm.trim()) {
+    setSearchOptions([]);
+    return;
+  }
+
+  setLoading(prev => ({...prev, search: true}));
+  try {
+    const res = await fetch(
+      `${process.env.REACT_APP_API_URL}/searchDocuments?term=${encodeURIComponent(searchTerm)}`, 
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    );
+    const data = await res.json();
+    setSearchOptions(data);
+  } catch (err) {
+    console.error('Search error:', err);
+    setSearchOptions([]);
+  } finally {
+    setLoading(prev => ({...prev, search: false}));
+  }
+};
+
+// Handle document selection
+const handleDocumentSelect = (selectedDocument) => {
+  if (selectedDocument) {
+    // Filter to show only the selected document
+    const filtered = documentData.filter(doc => doc.id === selectedDocument.id);
+    setDocumentData(filtered.length > 0 ? filtered : [selectedDocument]);
+  } else {
+    // If cleared, reset to show all documents
+    fetchAllDocuments();
+  }
+};
+
+    
 
   return (
     <Header>
@@ -375,14 +437,41 @@ const Dashboard = () => {
                   maxHeight: 'calc(75vh - 64px)', // Subtract header height
                   overflow: 'hidden', // Prevent outer scroll
                 }}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    placeholder="Search Documents..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    size="small"
-                    sx={{ mb: 2 }}
+                  <Autocomplete
+                    freeSolo
+                    options={searchOptions}
+                    getOptionLabel={(option) => option.doc_name || ''}
+                    onInputChange={(event, newValue) => {
+                      fetchSearchSuggestions(newValue);
+                    }}
+                    onChange={(event, newValue) => {
+                      handleDocumentSelect(newValue);
+                    }}
+                    loading={loading.search}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        fullWidth
+                        variant="outlined"
+                        placeholder="Search Documents..."
+                        size="small"
+                        sx={{ mb: 2 }}
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              {loading.search ? <CircularProgress color="inherit" size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <li {...props} key={option.id}>
+                        {option.doc_name}
+                      </li>
+                    )}
                   />
                   
                   <Box sx={{ 
@@ -402,65 +491,63 @@ const Dashboard = () => {
                       backgroundColor: 'rgba(0,0,0,0.3)',
                     },
                   }}>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      Search Results
-                    </Typography>
-                    
-                    {searchTerm ? (
-                      filteredItems.length > 0 ? (
-                        <List disablePadding>
-                          {filteredItems.map((item) => (
-                            <ListItem 
-                              key={item.id} 
-                              button 
-                              divider
-                              sx={{ py: 0.5, px: 1 }}
-                            >
-                              <ListItemText
-                                primary={item.title}
-                                secondary={
-                                  <>
-                                    <Typography component="span" variant="body2" color="text.primary">
-                                      {item.header_name}
-                                    </Typography>
-                                    {item.short_desc && (
-                                      <Box component="span" display="block">
-                                        {item.short_desc}
-                                      </Box>
-                                    )}
-                                  </>
-                                }
-                                primaryTypographyProps={{ 
-                                  fontWeight: 'medium',
-                                  fontSize: '0.875rem'
-                                }}
-                                secondaryTypographyProps={{ 
-                                  variant: 'body2',
-                                  fontSize: '0.75rem'
-                                }}
-                              />
-                            </ListItem>
-                          ))}
-                        </List>
-                      ) : (
+
+                    {loading.documents ? (
+                      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+                        <CircularProgress />
+                      </Box>
+                    ) : documentData.length === 0 ? (
+                      <Box display="flex" justifyContent="center" alignItems="center" height="200px">
                         <Typography variant="body2" color="textSecondary" textAlign="center">
-                          No matching items found
-                        </Typography>
-                      )
-                    ) : (
-                      <Box 
-                        display="flex" 
-                        flexDirection="column" 
-                        justifyContent="center" 
-                        alignItems="center" 
-                        height="100%"
-                        textAlign="center"
-                      >
-                        <Typography variant="body2" color="textSecondary">
-                          Enter a search term to find items
+                          No documents found
                         </Typography>
                       </Box>
+                    ) : (
+                      <List disablePadding>
+                        {documentData.map((document) => (
+                          <ListItem 
+                            key={document.id} 
+                            button 
+                            divider
+                            sx={{ py: 0.5, px: 1 }}
+                            onClick={() => {
+                              window.open(`${process.env.REACT_APP_API_URL}/download/${document.id}`, '_blank');
+                            }}
+                          >
+                            <ListItemText
+                              primary={document.doc_name}
+                              secondary={
+                                <>
+                                  {/* <Typography component="span" variant="body2" color="text.primary">
+                                    Uploaded: {formatDate(document.doc_name)}
+                                  </Typography> */}
+                                  {/* {document.item_title && (
+                                    <Typography component="div" variant="body2" color="text.primary">
+                                      Item: {document.item_title}
+                                    </Typography>
+                                  )} */}
+                                </>
+                              }
+                              primaryTypographyProps={{ 
+                                fontWeight: 'medium',
+                                fontSize: '0.875rem'
+                              }}
+                              secondaryTypographyProps={{ 
+                                variant: 'body2',
+                                fontSize: '0.75rem'
+                              }}
+                            />
+                            <ListItemIcon sx={{ minWidth: 'auto', ml: 1 }}>
+                              <IconButton edge="end" aria-label="download">
+                                <DownloadIcon fontSize="small" />
+                              </IconButton>
+                            </ListItemIcon>
+                          </ListItem>
+                        ))}
+                      </List>
                     )}
+                                      
+
                   </Box>
                 </CardContent>
               </Card>

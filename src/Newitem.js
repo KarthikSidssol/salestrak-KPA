@@ -59,7 +59,7 @@ const NewItem = () => {
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [showAddReminder, setShowAddReminder] = useState(false);
   const [showAddDocument, setShowAddDocument] = useState(false);
-  const isThirdColumnVisible = showAddReminder || showAddDocument;
+  const [ remindMeName , setRemindMeName] = useState ('');
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -124,10 +124,17 @@ const NewItem = () => {
     setHeaders(data);
   };
 
+  const RemindMeDropdown = async () =>{
+    const res = await fetch (`${process.env.REACT_APP_API_URL}/remindMeName`);
+    const data = await res.json();
+    setRemindMeName(data);
+  }
+
 
   useEffect(() => {
     fetchHeaders();
     fetchItemData();
+    RemindMeDropdown();
     if( encodedHeaderId){
       setShowItemDetails(true);
     }
@@ -222,7 +229,8 @@ const NewItem = () => {
   };
 
   const handleAddReminder = async () => {
-    if (!newReminder.name.trim() || !newReminder.date.trim() || !newReminder.before.trim()) {
+    // console.log("new Reminder",newReminder);
+    if (!newReminder.name.trim() || !newReminder.date.trim() || !newReminder.before) {
       enqueueSnackbar("Please fill all fields for the reminder", { variant: "warning" });
       return;
     }
@@ -835,13 +843,20 @@ const handleDownloadDocument = (docId) => {
                     />
 
                     <TextField
+                      select
                       fullWidth
-                      label="Remind Before"
+                      label="Remind Me"
                       value={newReminder.before}
                       onChange={(e) => setNewReminder({ ...newReminder, before: e.target.value })}
                       margin="normal"
                       size="small"
-                    />
+                    >
+                      {remindMeName.map((option, index) => (
+                        <MenuItem key={index} value={option.id}>
+                          {option.remind_me_name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
 
 
                     {isEditing ? (
