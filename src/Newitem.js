@@ -30,6 +30,7 @@ import { useParams, useNavigate  } from 'react-router-dom';
 import ConfirmDlgBox from './utils/ConfirmDlgBox'; 
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const NewItem = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -584,6 +585,13 @@ const handleDownloadDocument = (docId) => {
                     <IconButton onClick={() => handleDeleteItem(atob(encodedItemId))}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
+
+                    <IconButton 
+                    onClick={() => navigate('/home')} 
+                    aria-label="go back"
+                  >
+                    <ArrowBackIcon />
+                  </IconButton>
                   </Box>
                 </Box>
 
@@ -610,8 +618,14 @@ const handleDownloadDocument = (docId) => {
               </Box>
             ) : (
               <Box>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {encodedHeaderId ? 'Edit Item' : 'New Item'}
+                  <IconButton 
+                    onClick={() => navigate('/home')} 
+                    aria-label="go back"
+                  >
+                    <ArrowBackIcon />
+                  </IconButton>
                 </Typography>
 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
