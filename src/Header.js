@@ -61,6 +61,7 @@ useEffect(() => {
       if (!userRes.ok) throw new Error('Failed to fetch user data');
       const userData = await userRes.json();
       setUser(userData.user);
+      console.log('User data fetched:', userData.user);
     } catch (error) {
       console.error(error);
     }
@@ -139,14 +140,7 @@ const getDaysDifference = (date) => {
 
           {/* Right Section */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-
-             {user && (
-              <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold',color: 'primary.main'}}>
-                Welcome, {user.name}
-              </Typography>
-            )}
-
-
+             
             {/* Notifications */}
             <IconButton 
               onClick={handleNotificationClick}
@@ -175,6 +169,21 @@ const getDaysDifference = (date) => {
               </Badge>
             </IconButton>
 
+            {user && (
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'primary.main',
+                  display: { xs: 'block', sm: 'block' } 
+                }}
+              >
+                Welcome, {user.name}
+              </Typography>
+            )}
+
+
             {/* User Avatar */}
             <IconButton 
               onClick={handleMenu} 
@@ -202,7 +211,6 @@ const getDaysDifference = (date) => {
                   }
                 }}
               >
-                U
               </Avatar>
             </IconButton>
 
@@ -318,14 +326,25 @@ const getDaysDifference = (date) => {
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #e2e8f0' }}>
+              {/* <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #e2e8f0' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                  John Doe
+                  {user.name}
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#64748b' }}>
-                  john.doe@company.com
+                  {user.email}
                 </Typography>
-              </Box>
+              </Box> */}
+
+              {user && (
+                <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #e2e8f0' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                    {user.name}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#64748b' }}>
+                    {user.email}
+                  </Typography>
+                </Box>
+              )}
               
               <MenuItem 
                 onClick={handleClose}

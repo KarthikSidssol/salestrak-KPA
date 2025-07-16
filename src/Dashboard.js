@@ -174,10 +174,62 @@ const handleDocumentSelect = (selectedDocument) => {
   }
 };
 
+const copyToClipboard = (text) => {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text)
+      .then(() => alert('Link copied to clipboard!'))
+      .catch(err => {
+        console.error('Clipboard copy failed:', err);
+        alert('Could not copy link.');
+      });
+  } else {
+    // Fallback for insecure context
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";  // Avoid scrolling
+    textArea.style.top = "-1000px";
+    textArea.style.left = "-1000px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      const success = document.execCommand('copy');
+      alert(success ? 'Link copied to clipboard!' : 'Copy failed');
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+      alert('Could not copy link.');
+    }
+    document.body.removeChild(textArea);
+  }
+};
+
+
+// const handleShareDocument = (document) => {
+//   const shareableLink = `${process.env.REACT_APP_API_URL}/download/${document.id}`;
+//   if (navigator.share) {
+//     navigator.share({
+//       title: document.doc_name,
+//       text: 'Check out this document:',
+//       url: shareableLink,
+//     }).catch((err) => {
+//       console.error('Share failed:', err);
+//     });
+//   } 
+//   else {
+//     navigator.clipboard.writeText(shareableLink)
+//       .then(() => {
+//         alert('Link copied to clipboard!');
+//       })
+//       .catch((err) => {
+//         console.error('Failed to copy:', err);
+//         alert('Could not copy link. Please try again.');
+//       });
+//   }
+// };
+
 const handleShareDocument = (document) => {
   const shareableLink = `${process.env.REACT_APP_API_URL}/download/${document.id}`;
 
-  // Option 1: Use Web Share API (mobile-friendly)
   if (navigator.share) {
     navigator.share({
       title: document.doc_name,
@@ -186,19 +238,11 @@ const handleShareDocument = (document) => {
     }).catch((err) => {
       console.error('Share failed:', err);
     });
-  } 
-  // Option 2: Fallback to clipboard copy
-  else {
-    navigator.clipboard.writeText(shareableLink)
-      .then(() => {
-        alert('Link copied to clipboard!');
-      })
-      .catch((err) => {
-        console.error('Failed to copy:', err);
-        alert('Could not copy link. Please try again.');
-      });
+  } else {
+    copyToClipboard(shareableLink);
   }
 };
+
 
   const totalItemCount = itemsData.reduce((acc, group) => acc + group.items.length, 0);
 
@@ -781,6 +825,7 @@ const fetchItemSearchSuggestions = async (term) => {
                                 aria-label="share"
                                 onClick={(e) => {
                                   e.stopPropagation(); // Prevent triggering the parent ListItem's onClick
+                                  e.preventDefault();
                                   handleShareDocument(document);
                                 }}
                                 sx={{ mr: 1 }}
